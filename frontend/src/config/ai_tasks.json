@@ -1,8 +1,8 @@
 [
   {
     "id": "level1",
-    "shortLabel": "Computer eingeschaltet",
-    "label": "Du hast den Computer eingeschaltet",
+    "shortLabel": "Computer ist an",
+    "label": "Geschafft, du hast den Computer angeschaltet.\nWeiter geht’s!",
     "threshold": 0.0017,
     "lockedImg": "/MYSTERY_1.1.png",
     "unlockedImg": "/Unlocked_1.png",
@@ -10,8 +10,8 @@
   },
   {
     "id": "level2",
-    "shortLabel": "10 Google-Suchanfragen",
-    "label": "Du hast 10 Suchanfragen bei Google geschafft",
+    "shortLabel": "10 Suchanfragen",
+    "label": "Du hast Energie für 10 Suchanfragen erzeugt. Über Google, DuckDuckGo, Ecosia, Bing oder ähnliche Suchmaschinen.\nAuf zum nächsten Level!",
     "threshold": 0.003,
     "lockedImg": "/MYSTERY_2.2.png",
     "unlockedImg": "/Unlocked_2.png",
@@ -20,7 +20,7 @@
   {
     "id": "level3",
     "shortLabel": "1.000 Zeichen übersetzt",
-    "label": "Du hast 1.000 Zeichen Text mit KI übersetzt",
+    "label": "Es wurden 1000 Zeichen mit KI übersetzt.\nSuper, weiter geht’s!",
     "threshold": 0.0045,
     "lockedImg": "/MYSTERY_3.3.png",
     "unlockedImg": "/Unlocked_3.png",
@@ -29,7 +29,7 @@
   {
     "id": "level4",
     "shortLabel": "2 ChatGPT-Fragen",
-    "label": "Du hast 2 Fragen an ChatGPT geschafft",
+    "label": "Du hast zwei Fragen mit ChatGPT beantwortet. Puh, ganz schön anstrengend.\nAber da geht noch mehr!",
     "threshold": 0.006,
     "lockedImg": "/MYSTERY_4.4.png",
     "unlockedImg": "/Unlocked_4.png",
@@ -38,16 +38,16 @@
   {
     "id": "level5",
     "shortLabel": "Bild mit KI erstellt",
-    "label": "Du hast ein Bild mit KI erstellt",
+    "label": "Du hast ein Bild mit KI erstellt.\nWas für eine Treterei!\nWillst du wirklich noch mehr?",
     "threshold": 0.01,
     "lockedImg": "/MYSTERY_5.5.png",
-    "unlockedImg": "/Unlocked_6.png",
+    "unlockedImg": "/Unlocked_5.png",
     "warningOnly": false
   },
   {
     "id": "level6",
     "shortLabel": "5 Sekunden KI-Video",
-    "label": "Streng Dich an, in einer Stunde hast Du 5 Sekunden Video mit KI erstellt wenn Du konstant mit 100 Watt trittst",
+    "label": "Du machst weiter? Respekt!\nNur noch 1 Stunde treten, und ein 5 Sekunden Video ist mit KI erstellt.\nABER\ngib mal anderen eine Chance (:",
     "threshold": 0.5,
     "lockedImg": "/MYSTERY_6.6.png",
     "unlockedImg": "/Unlocked_6.png",

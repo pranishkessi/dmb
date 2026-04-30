@@ -25,7 +25,7 @@ export default function InstructionContent() {
       {/* Title */}
       <HStack justify="space-between" mb={4}>
         <Heading size="lg">Anleitung</Heading>
-        <Badge px={3} py={1} rounded="full">AI Academia</Badge>
+        <Badge px={3} py={1} rounded="full">KI Academia</Badge>
       </HStack>
 
       {/* 2 columns on md+, single column on small */}
@@ -87,18 +87,7 @@ export default function InstructionContent() {
             </List>
           </Box>
 
-          <Box>
-            <HStack mb={2}>
-              <Icon as={InfoOutlineIcon} />
-              <Heading size="md">Freischaltbare KI-Aufgaben</Heading>
-            </HStack>
-            <List spacing={1} fontSize="sm">
-              <ListItem>• 6 Suchanfragen an Google</ListItem>
-              <ListItem>• Eine Bilderkennung</ListItem>
-              <ListItem>• 20 einfache ChatGPT-Abfragen</ListItem>
-              <ListItem>• Eine Text-zu-Sprache Umwandlung</ListItem>
-            </List>
-          </Box>
+          
         </VStack>
 
         {/* RIGHT — Small images + START/STOP badges */}

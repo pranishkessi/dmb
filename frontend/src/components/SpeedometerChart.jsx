@@ -1,3 +1,4 @@
+// src/components/SpeedometerChart.jsx
 import React, { useMemo } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -127,15 +128,15 @@ function SpeedometerChart({ energy }) {
       maintainAspectRatio: false,
       animation: {
         animateRotate: true,
-        duration: 1200,
+        duration: 900,
         easing: "easeOutCubic",
       },
       layout: {
         padding: {
-          top: 8,
+          top: 0,
           bottom: 0,
-          left: 8,
-          right: 8,
+          left: 0,
+          right: 0,
         },
       },
       plugins: {
@@ -151,30 +152,32 @@ function SpeedometerChart({ energy }) {
       width="100%"
       height="100%"
       display="flex"
-      flexDirection="column"
       alignItems="center"
       justifyContent="center"
       overflow="hidden"
     >
       <Box
-        position="relative"
-        width="100%"
-        flex="1"
-        minH="0"
+        position="absolute"
+        left="20px"
+        right="20px"
+        top="22px"
+        bottom="26px"
       >
         <Doughnut data={chartData} options={chartOptions} />
       </Box>
 
       <Text
+        position="absolute"
+        bottom="8px"
+        left="0"
+        right="0"
         textAlign="center"
-        mt={1}
-        mb={1}
-        fontSize="md"
-        fontWeight="bold"
-        lineHeight="1.2"
-        color={THEME_COLORS.text}
+        fontSize="13px"
+        fontWeight="900"
+        lineHeight="1"
+        color="#111827"
       >
-        {safeEnergy.toFixed(4)} kWh
+        {safeEnergy.toFixed(4).replace(".", ",")} kWh
       </Text>
     </Box>
   );

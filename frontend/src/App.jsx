@@ -99,9 +99,9 @@ function App() {
           const unlocked = getUnlockedCountFromSnapshot(d.last_session_snapshot);
           const displayEnergy = getDisplayEnergyFromSnapshot(d.last_session_snapshot);
 
-          const msg = `Session beendet. Energie: ${displayEnergy.toFixed(
-            4
-          )} kWh • Aufgaben: ${unlocked} / ${TOTAL_TASKS}`;
+          const msg = `Session beendet. Energie: ${displayEnergy
+            .toFixed(4)
+            .replace(".", ",")} kWh • Aufgaben: ${unlocked} / ${TOTAL_TASKS}`;
 
           dispatchAvatarTempMessage(msg, 30000);
 
@@ -129,8 +129,8 @@ function App() {
   const handleStart = async () => {
     if (isRunning) {
       toast({
-        title: "Session already running.",
-        description: "You must stop the current session before starting a new one.",
+        title: "Session läuft bereits.",
+        description: "Stoppe zuerst die aktuelle Sitzung, bevor du eine neue startest.",
         status: "info",
         duration: 4000,
         isClosable: true,
@@ -163,7 +163,7 @@ function App() {
     return (
       <ChakraProvider>
         <Box p={8} textAlign="center">
-          <Text mb={4}>Loading session data...</Text>
+          <Text mb={4}>Lade Sitzungsdaten...</Text>
           <Spinner size="xl" />
         </Box>
       </ChakraProvider>
@@ -175,7 +175,7 @@ function App() {
 
   return (
     <ChakraProvider>
-      <VStack p={4} spacing={6} align="stretch" h="100vh" overflow="hidden">
+      <VStack p={0} spacing={0} align="stretch" h="100vh" w="100vw" overflow="hidden">
         <DashboardLayout
           metrics={data}
           history={history}
@@ -226,10 +226,10 @@ function App() {
                 </Text>
                 <Text>
                   <Box as="span" fontWeight="bold">Energie:</Box>{" "}
-                  {summaryEnergy.toFixed(4)} kWh
+                  {summaryEnergy.toFixed(4).replace(".", ",")} kWh
                 </Text>
                 <Text>
-                  <Box as="span" fontWeight="bold">KI-Aufgabe Freigeschaltet:</Box>{" "}
+                  <Box as="span" fontWeight="bold">KI-Aufgaben freigeschaltet:</Box>{" "}
                   {summaryUnlocked} / {TOTAL_TASKS}
                 </Text>
               </VStack>

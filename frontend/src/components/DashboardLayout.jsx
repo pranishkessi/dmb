@@ -4,14 +4,9 @@ import {
   Box,
   Button,
   Grid,
-  GridItem,
-  VStack,
-  HStack,
   Text,
-  Heading,
   Image,
   Flex,
-  IconButton,
   useDisclosure,
   Modal,
   ModalOverlay,
@@ -19,10 +14,8 @@ import {
   ModalBody,
   ModalCloseButton,
 } from "@chakra-ui/react";
-import { FaInfoCircle } from "react-icons/fa";
 
 import SpeedometerChart from "./SpeedometerChart";
-import LineChartLive from "./LineChartLive";
 import AITaskImageGrid from "./AITaskImageGrid";
 import AvatarDisplay from "./AvatarDisplay";
 import { useAvatarMessages } from "../hooks/useAvatarMessages";
@@ -39,13 +32,30 @@ import { THEME_COLORS } from "../constants/themeColors";
 
 const ACTIVE_TASKS = AI_TASKS;
 
+const DESIGN_WIDTH = 1600;
+const DESIGN_HEIGHT = 900;
+
 function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
   const energy = metrics?.energy_kwh ?? 0;
   const power = metrics?.power_watts ?? 0;
   const stroke = metrics?.stroke_rate ?? 0;
   const distance = metrics?.distance_meters ?? 0;
   const time = metrics?.elapsed_time ?? 0;
-  const status = metrics?.connected ? "Verbunden" : "Nicht verbunden";
+  const isConnected = metrics?.connected === true;
+
+  const [canvasScale, setCanvasScale] = useState(1);
+
+  useEffect(() => {
+    const updateScale = () => {
+      const scaleX = window.innerWidth / DESIGN_WIDTH;
+      const scaleY = window.innerHeight / DESIGN_HEIGHT;
+      setCanvasScale(Math.min(scaleX, scaleY));
+    };
+
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, []);
 
   const TASK_THRESHOLDS = ACTIVE_TASKS.map((task) => task.threshold);
   const FINAL_UNLOCK_DELAY_MS = 2500;
@@ -57,8 +67,9 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
   const level5Threshold = ACTIVE_TASKS[4]?.threshold ?? Infinity;
   const level6Threshold = ACTIVE_TASKS[5]?.threshold ?? Infinity;
 
-  const unlockedTasks = ACTIVE_TASKS.map((task) => ({
-    label: task.shortLabel,
+   const unlockedTasks = ACTIVE_TASKS.map((task) => ({
+    label: task.label,
+    shortLabel: task.shortLabel,
     threshold: task.threshold,
   }));
 
@@ -68,6 +79,12 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
     sessionActive,
     unlockedTasks,
   });
+
+  const welcomeMessage = {
+    kind: "info",
+    text:
+      "Willkommen!\nDrück den grünen Startknopf und los gehts. Tritt in die Pedale und lass dich überraschen.",
+  };
 
   const [overrideMessage, setOverrideMessage] = useState(null);
 
@@ -105,6 +122,7 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
       setOverrideMessage({ kind: "info", text: "Sitzung gestartet — los geht’s 🚴" });
       infoTimeoutRef.current = setTimeout(() => setOverrideMessage(null), 1500);
     }
+
     return () => clearTimeout(infoTimeoutRef.current);
   }, [sessionActive]);
 
@@ -153,7 +171,7 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
         setOverrideMessage({
           kind: "warning",
           source: "idle",
-          text: `Sind Sie da?\nTreten Sie weiter in die Pedale oder die Sitzung endet in ${remaining} Sekunde${remaining === 1 ? "" : "n"}…`,
+          text: `Bist du noch da?\nTritt weiter in die Pedale oder die Sitzung endet in ${remaining} Sekunde${remaining === 1 ? "" : "n"}…`,
         });
       } else if (idleSec >= IDLE_LIMIT_SEC) {
         setIdleCountdown(null);
@@ -197,13 +215,22 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
           energy < level6Threshold &&
           !allUnlockedRef.current;
 
-        if (stillInLevel5Window) {
+                if (stillInLevel5Window) {
           hasShownLevel6WarningRef.current = true;
           setOverrideMessage({
             kind: "warning",
             source: "level6",
             text: LEVEL6_WARNING_TEXT,
           });
+
+          // Show the Level 6 warning only temporarily, then allow
+          // normal "Wussten Sie?" messages to continue during the long final phase.
+          clearTimeout(infoTimeoutRef.current);
+          infoTimeoutRef.current = setTimeout(() => {
+            setOverrideMessage((current) =>
+              current?.source === "level6" ? null : current
+            );
+          }, 12000);
         }
       }, LEVEL6_WARNING_DELAY_MS);
     }
@@ -220,7 +247,7 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
 
       setOverrideMessage({
         kind: "success",
-        text: "Erstaunlich! Sie haben alle KI-Aufgaben freigeschaltet. Die Sitzung endet gleich automatisch.",
+        text: "Erstaunlich! Du hast alle KI-Aufgaben freigeschaltet. Die Sitzung endet gleich automatisch.",
       });
 
       clearTimeout(finalUnlockTimerRef.current);
@@ -246,6 +273,7 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
       clearTimeout(infoTimeoutRef.current);
       clearTimeout(level6WarningTimerRef.current);
     }
+
     return () => {
       clearInterval(idleTickerRef.current);
       clearTimeout(finalUnlockTimerRef.current);
@@ -261,218 +289,271 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
+  const displayMessage = overrideMessage || (sessionActive ? message : welcomeMessage);
+
+  const metricItems = [
+    { label: "Leistung", value: `${Math.round(power)} W` },
+    { label: "Trittfrequenz", value: `${Math.round(stroke)} U/min` },
+    { label: "Distanz", value: `${Math.round(distance)} m` },
+    { label: "Zeit", value: formatTime(time) },
+    { label: "Energie", value: `${formatKwh(energy)} kWh` },
+  ];
+
+  const logos = [
+    { src: "/BMFTR_Logo2.png", alt: "BMFTR Logo" },
+    { src: "/INIT_Logo.png", alt: "inIT TH OWL Logo" },
+    { src: "/KI_Akademie_OWL_Logo.png", alt: "KI Akademie OWL Logo" },
+    { src: "/visual.png", alt: "Deutsches Museum Bonn Logo" },
+  ];
+
   return (
-    <VStack spacing={3} w="100vw" h="100vh" p={3} bg={THEME_COLORS.pageBg} overflow="hidden">
-      <Grid templateColumns="220px repeat(6, 1fr) 40px" gap={3} w="100%">
-        <GridItem>
-          <VStack spacing={3} align="start">
-            <HStack spacing={3}>
-              <Button
-                onClick={onStart}
-                isDisabled={sessionActive}
-                bg="#D97706"
-                color="white"
-                borderRadius="full"
-                height="84px"
-                width="84px"
-                fontSize="sm"
-                fontWeight="bold"
-                _hover={{ bg: "#B45309" }}
-              >
-                START
-              </Button>
-              <Button
-                onClick={() => onStop && onStop({ reason: "manual" })}
-                bg="#EA580C"
-                color="white"
-                borderRadius="full"
-                height="84px"
-                width="84px"
-                fontSize="sm"
-                fontWeight="bold"
-                _hover={{ bg: "#C2410C" }}
-              >
-                STOP
-              </Button>
-              <IconButton
-                aria-label="Anleitung"
-                title="Anleitung öffnen"
-                icon={<FaInfoCircle />}
-                onClick={onOpen}
-                size="sm"
-                bg={THEME_COLORS.cardBg}
-                color={THEME_COLORS.text}
-                borderWidth="1px"
-                borderColor={THEME_COLORS.border}
-                _hover={{ bg: THEME_COLORS.panelBgAlt }}
-              />
-            </HStack>
-          </VStack>
-        </GridItem>
+    <Box
+      w="100vw"
+      h="100vh"
+      overflow="hidden"
+      bg="#f26a1b"
+      position="relative"
+    >
+      <Box
+        position="absolute"
+        left="50%"
+        top="50%"
+        w={`${DESIGN_WIDTH}px`}
+        h={`${DESIGN_HEIGHT}px`}
+        transform={`translate(-50%, -50%) scale(${canvasScale})`}
+        transformOrigin="center center"
+        bg="#f26a1b"
+        bgImage="url('/Background_orange.png')"
+        bgSize="cover"
+        bgPosition="center"
+        bgRepeat="no-repeat"
+        overflow="hidden"
+      >
+              {/* Bluetooth / ergometer connection indicator */}
+        <Box
+          position="absolute"
+          left="1470px"
+          top="18px"
+          w="28px"
+          h="28px"
+          borderRadius="full"
+          bg={isConnected ? "#22c55e" : "#dc2626"}
+          border="4px solid rgba(255,255,255,0.95)"
+          boxShadow={
+            isConnected
+              ? "0 0 18px rgba(34,197,94,0.95)"
+              : "0 0 18px rgba(220,38,38,0.95)"
+          }
+          zIndex="20"
+          title={isConnected ? "Bluetooth verbunden" : "Bluetooth getrennt"}
+        />
+        {/* Left control buttons */}
+        <Button
+          position="absolute"
+          left="46px"
+          top="45px"
+          w="152px"
+          h="122px"
+          onClick={onStart}
+          isDisabled={sessionActive}
+          bg="#38b54a"
+          color="white"
+          borderRadius="52px"
+          fontSize="32px"
+          fontWeight="900"
+          letterSpacing="0.5px"
+          boxShadow="0 8px 18px rgba(0,0,0,0.22)"
+          border="4px solid rgba(255,255,255,0.9)"
+          _hover={{ bg: "#2f9d40" }}
+          _disabled={{
+            opacity: 0.55,
+            cursor: "not-allowed",
+            _hover: { bg: "#38b54a" },
+          }}
+        >
+          START
+        </Button>
 
-        {[
-          { label: "Leistung", value: `${power} W` },
-          { label: "Schlagfrequenz", value: `${stroke} SPM` },
-          { label: "Distanz", value: `${distance} m` },
-          { label: "Zeit", value: formatTime(time) },
-          { label: "Energie", value: `${energy.toFixed(4)} kWh` },
-          {
-            label: "Status",
-            value: (
-              <Text color={metrics?.connected ? "#B45309" : "#C2410C"}>
-                {status}
+        <Button
+          position="absolute"
+          left="46px"
+          top="195px"
+          w="152px"
+          h="118px"
+          onClick={onOpen}
+          bg="rgba(255,255,255,0.94)"
+          color="#111827"
+          borderRadius="52px"
+          fontSize="31px"
+          fontWeight="900"
+          boxShadow="0 8px 18px rgba(0,0,0,0.18)"
+          border="4px solid rgba(255,255,255,0.9)"
+          _hover={{ bg: "#ffffff" }}
+        >
+          Info
+        </Button>
+
+        <Button
+          position="absolute"
+          left="46px"
+          top="342px"
+          w="152px"
+          h="122px"
+          onClick={() => onStop && onStop({ reason: "manual" })}
+          bg="#d71920"
+          color="white"
+          borderRadius="52px"
+          fontSize="32px"
+          fontWeight="900"
+          letterSpacing="0.5px"
+          boxShadow="0 8px 18px rgba(0,0,0,0.22)"
+          border="4px solid rgba(255,255,255,0.9)"
+          _hover={{ bg: "#b9151b" }}
+        >
+          STOP
+        </Button>
+
+        {/* Metrics */}
+        <Grid
+          position="absolute"
+          left="268px"
+          top="48px"
+          w="1110px"
+          h="122px"
+          templateColumns="repeat(5, 1fr)"
+          gap="12px"
+        >
+          {metricItems.map((item) => (
+            <Flex
+              key={item.label}
+              direction="column"
+              align="center"
+              justify="center"
+              bg="rgba(255,255,255,0.88)"
+              borderRadius="0px"
+              border="0"
+              boxShadow="0 4px 12px rgba(0,0,0,0.10)"
+              textAlign="center"
+            >
+              <Text
+                fontSize="29px"
+                lineHeight="1.05"
+                color="#111827"
+                fontWeight="900"
+              >
+                {item.label}
               </Text>
-            ),
-          },
-        ].map((item, idx) => (
-          <GridItem
-            key={idx}
-            p={1}
-            bg={THEME_COLORS.cardBg}
-            borderRadius="md"
-            textAlign="center"
-            boxShadow={THEME_COLORS.shadow}
-            borderWidth="1px"
-            borderColor={THEME_COLORS.border}
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            minH="84px"
-          >
-            <Heading size="xs" color={THEME_COLORS.textMuted}>
-              {item.label}
-            </Heading>
-            <Box mt={1} fontWeight="bold" fontSize="md" color={THEME_COLORS.text}>
-              {item.value}
-            </Box>
-          </GridItem>
-        ))}
-
-        <GridItem />
-      </Grid>
-
-      <Grid templateRows="2fr 3fr" gap={3} w="100%" flex={1} minH={0}>
-        <GridItem minH={0}>
-          <Grid templateColumns="1fr 1fr 1fr" gap={3} h="100%" minH={0}>
-            <Flex
-              p={3}
-              bg={THEME_COLORS.panelBg}
-              borderRadius="md"
-              boxShadow={THEME_COLORS.shadow}
-              borderWidth="1px"
-              borderColor={THEME_COLORS.border}
-              justify="center"
-              align="center"
-              minH={0}
-              overflow="hidden"
-            >
-              <SpeedometerChart energy={energy} />
+              <Text
+                mt="9px"
+                fontSize="34px"
+                lineHeight="1"
+                color="#111827"
+                fontWeight="900"
+              >
+                {item.value}
+              </Text>
             </Flex>
+          ))}
+        </Grid>
 
+                {/* Message panel */}
+        <Flex
+          position="absolute"
+          left="288px"
+          top="220px"
+          w="560px"
+          h="228px"
+          bg="rgba(255,245,235,0.72)"
+          border="2px solid #f28b3c"
+          borderRadius="10px"
+          boxShadow="0 4px 14px rgba(0,0,0,0.12)"
+          align="center"
+          justify="center"
+          p="18px"
+          overflow="hidden"
+        >
+          <AvatarDisplay message={displayMessage} />
+        </Flex>
+
+        {/* Gauge panel */}
+        <Flex
+          position="absolute"
+          left="865px"
+          top="220px"
+          w="515px"
+          h="228px"
+          bg="rgba(255,238,222,0.88)"
+          border="0"
+          boxShadow="0 4px 14px rgba(0,0,0,0.12)"
+          align="center"
+          justify="center"
+          p="10px"
+          overflow="hidden"
+        >
+          <SpeedometerChart energy={energy} />
+        </Flex>
+
+        {/* Logos */}
+        <Flex
+          position="absolute"
+          left="1410px"
+          top="48px"
+          w="155px"
+          h="425px"
+          direction="column"
+          align="center"
+          justify="space-between"
+        >
+          {logos.map((logo) => (
             <Flex
-              p={3}
-              bg={THEME_COLORS.panelBg}
-              borderRadius="md"
-              boxShadow={THEME_COLORS.shadow}
-              borderWidth="1px"
-              borderColor={THEME_COLORS.border}
-              justify="center"
+              key={logo.src}
+              w="155px"
+              h="76px"
+              bg="rgba(255,255,255,0.92)"
               align="center"
-              minH={0}
-              overflow="hidden"
+              justify="center"
+              p="8px"
+              boxShadow="0 4px 10px rgba(0,0,0,0.12)"
             >
-              <LineChartLive power={power} stroke={stroke} />
+              <Image
+                src={logo.src}
+                alt={logo.alt}
+                maxW="140px"
+                maxH="62px"
+                objectFit="contain"
+              />
             </Flex>
+          ))}
+        </Flex>
 
-            <Box
-              p={3}
-              pr={4}
-              bg={THEME_COLORS.panelBg}
-              borderRadius="md"
-              boxShadow={THEME_COLORS.shadow}
-              borderWidth="1px"
-              borderColor={THEME_COLORS.border}
-              h="100%"
-              minH={0}
-              display="flex"
-              flexDirection="column"
-              justifyContent="center"
-              alignItems="center"
-              overflow="hidden"
-              boxSizing="border-box"
-            >
-              <AvatarDisplay message={overrideMessage || message} />
-            </Box>
-          </Grid>
-        </GridItem>
+        {/* Level cards */}
+        <Box
+          position="absolute"
+          left="47px"
+          top="508px"
+          w="1510px"
+          h="350px"
+        >
+          <AITaskImageGrid energy={energy} />
+        </Box>
 
-        <GridItem minH={0}>
-          <Flex
-            p={2}
-            pr={3}
-            bg={THEME_COLORS.panelBgAlt}
-            borderRadius="md"
-            boxShadow={THEME_COLORS.shadow}
-            borderWidth="1px"
-            borderColor={THEME_COLORS.border}
-            h="100%"
-            minH={0}
-            align="center"
-            justify="center"
-            overflow="hidden"
-            boxSizing="border-box"
-          >
-            <AITaskImageGrid energy={energy} />
-          </Flex>
-        </GridItem>
-      </Grid>
+        <Modal isOpen={isOpen} onClose={onClose} size="6xl">
+          <ModalOverlay />
+          <ModalContent rounded="2xl" p={2} bg={THEME_COLORS.cardBg}>
+            <ModalCloseButton />
+            <ModalBody p={{ base: 4, md: 8 }}>
+              <InstructionContent lang="de" />
+            </ModalBody>
+          </ModalContent>
+        </Modal>
 
-      <Grid
-        templateColumns="repeat(4, 1fr)"
-        gap={3}
-        w="100%"
-        bg="#f16623"
-        py={3}
-        px={5}
-        borderRadius="xl"
-        borderWidth="1px"
-        borderColor="#E9B27A"
-        boxShadow="0 4px 12px rgba(191, 102, 22, 0.10)"
->
-        {[
-          "/BMFTR_Logo2.png",
-          "/INIT_Logo.png",
-          "/KI_Akademie_OWL_Logo.png",
-          "/visual.png",
-        ].map((src, idx) => (
-          <Box
-            key={idx}
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minH="72px"
-          >
-            <Image src={src} alt={`Logo ${idx + 1}`} maxH="62px" objectFit="contain" />
-          </Box>
-        ))}
-      </Grid>
-
-      <Modal isOpen={isOpen} onClose={onClose} size="6xl">
-        <ModalOverlay />
-        <ModalContent rounded="2xl" p={2} bg={THEME_COLORS.cardBg}>
-          <ModalCloseButton />
-          <ModalBody p={{ base: 4, md: 8 }}>
-            <InstructionContent lang="de" />
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
-      <ScreensaverOverlay
-        isOpen={isUiIdle}
-        onDismiss={resetUiIdle}
-        lang="de"
-      />
-    </VStack>
+        <ScreensaverOverlay
+          isOpen={isUiIdle}
+          onDismiss={resetUiIdle}
+          lang="de"
+        />
+      </Box>
+    </Box>
   );
 }
 
@@ -480,6 +561,10 @@ const formatTime = (s) => {
   const m = Math.floor(s / 60).toString().padStart(2, "0");
   const sec = Math.floor(s % 60).toString().padStart(2, "0");
   return `${m}:${sec}`;
+};
+
+const formatKwh = (value) => {
+  return Number(value || 0).toFixed(4).replace(".", ",");
 };
 
 export default DashboardLayout;

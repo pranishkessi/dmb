@@ -1,14 +1,10 @@
+// src/components/AITaskImageGrid.jsx
 import React from "react";
-import { HStack, Box } from "@chakra-ui/react";
+import { HStack, VStack, Box, Text } from "@chakra-ui/react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { AI_TASKS } from "../constants/aiTasks";
-import { THEME_COLORS } from "../constants/themeColors";
 
-// const segmentColors = ["#A0AEC0", "#63B3ED", "#F6AD55", "#48BB78", "#805AD5", "#E53E3E"];
-const segmentColors = THEME_COLORS.taskBorders;
-
-// Phase 6: use all 6 tasks
 const TASKS = AI_TASKS;
 
 function AITaskImageGrid({ energy }) {
@@ -30,49 +26,69 @@ function AITaskImageGrid({ energy }) {
 
   return (
     <HStack
-      spacing={4}
+      spacing="42px"
       w="100%"
       h="100%"
-      align="center"
-      justify="space-evenly"
+      align="stretch"
+      justify="center"
     >
       {TASKS.map((task, idx) => {
         const unlocked = Number(energy) >= task.threshold;
-        const borderColor = segmentColors[idx % segmentColors.length];
 
         return (
-          <Box
+          <VStack
             key={task.id}
-            flex="1"
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            minW="0"
-            h="100%"
+            w="215px"
+            h="350px"
+            spacing="0"
+            align="center"
+            justify="flex-start"
+            bg="rgba(255,255,255,0.72)"
+            boxShadow="0 6px 14px rgba(0,0,0,0.14)"
+            border="0"
+            p="14px 14px 12px"
           >
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={`${task.id}-${unlocked ? "unlocked" : "locked"}`}
-                src={unlocked ? task.unlockedImg : task.lockedImg}
-                alt={unlocked ? "Unlocked" : "Locked"}
-                style={{
-                  width: "92%",
-                  maxWidth: "210px",
-                  maxHeight: "2900px",
-                  objectFit: "contain",
-                  border: `10px solid ${borderColor}`,
-                  borderRadius: "1.25rem",
-                  boxShadow: "0 6px 24px 0 rgba(30,30,30,0.10)",
-                  transition: "border-color 0.2s",
-                  background: "#cae8eb",
-                }}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.06 }}
-                transition={{ duration: 0.45 }}
-              />
-            </AnimatePresence>
-          </Box>
+            <Box
+              w="168px"
+              h="255px"
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              overflow="hidden"
+              bg="transparent"
+            >
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={`${task.id}-${unlocked ? "unlocked" : "locked"}`}
+                  src={unlocked ? task.unlockedImg : task.lockedImg}
+                  alt={unlocked ? `${task.shortLabel} freigeschaltet` : `${task.shortLabel} gesperrt`}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    background: "transparent",
+                    display: "block",
+                  }}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.04 }}
+                  transition={{ duration: 0.35 }}
+                />
+              </AnimatePresence>
+            </Box>
+
+            <Text
+              mt="18px"
+              color="#111827"
+              fontSize="31px"
+              fontWeight="900"
+              lineHeight="1"
+              whiteSpace="nowrap"
+              textAlign="center"
+            >
+              Level {idx + 1}
+            </Text>
+          </VStack>
         );
       })}
     </HStack>
