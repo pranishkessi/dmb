@@ -58,7 +58,33 @@ until curl -s http://localhost:5173 > /dev/null; do
 done
 echo "Frontend is now reachable."
 
+echo "Triggering PM5 wake via Shelly..."
+"$PROJECT_DIR/venv/bin/python" "$PROJECT_DIR/scripts/shelly_wake_pm5.py"
+SHELLY_WAKE_EXIT=$?
+
+if [[ "$SHELLY_WAKE_EXIT" -ne 0 ]]; then
+  echo "WARNING: Shelly PM5 wake failed with exit code $SHELLY_WAKE_EXIT."
+  echo "Continuing backend/frontend startup anyway."
+else
+  echo "Shelly PM5 wake sequence completed."
+fi
+
 echo "SKIP_CHROMIUM=${SKIP_CHROMIUM:-0}"
+
+if [[ "${SKIP_CHROMIUM:-0}" == "1" ]]; then
+  echo "SKIP_CHROMIUM=1 set → not launching browser here."
+else
+  echo "Launching Chromium browser in kiosk mode..."
+  chromium-browser --kiosk http://localhost:5173 \
+    --disable-background-networking \
+    --disable-component-update \
+    --disable-default-apps \
+    --noerrdialogs \
+    --no-first-run \
+    --disable-infobars \
+    --start-fullscreen \
+    >/dev/null 2>&1 &
+fi
 
 echo "Backend and frontend startup completed."
 echo "Keeping service alive and monitoring backend/frontend..."
