@@ -10,6 +10,10 @@ const TASKS = AI_TASKS;
 function AITaskImageGrid({ energy }) {
   const hasCelebrated = React.useRef(Array(TASKS.length).fill(false));
 
+  const currentLevelIndex = TASKS.reduce((currentIndex, task, idx) => {
+    return Number(energy) >= Number(task.threshold) ? idx : currentIndex;
+  }, -1);
+
   React.useEffect(() => {
     TASKS.forEach((task, idx) => {
       if (energy >= task.threshold && !hasCelebrated.current[idx]) {
@@ -33,7 +37,8 @@ function AITaskImageGrid({ energy }) {
       justify="center"
     >
       {TASKS.map((task, idx) => {
-        const unlocked = Number(energy) >= task.threshold;
+        const unlocked = Number(energy) >= Number(task.threshold);
+        const isCurrentLevel = idx === currentLevelIndex;
 
         return (
           <VStack
@@ -43,10 +48,15 @@ function AITaskImageGrid({ energy }) {
             spacing="0"
             align="center"
             justify="flex-start"
-            bg="rgba(255,255,255,0.72)"
-            boxShadow="0 6px 14px rgba(0,0,0,0.14)"
-            border="0"
-            p="14px 14px 12px"
+            bg={isCurrentLevel ? "rgba(255, 220, 0, 0.60)" : "rgba(255,255,255,0.72)"}
+            boxShadow={
+              isCurrentLevel
+                ? "0 0 26px rgba(255, 220, 0, 0.60), 0 8px 18px rgba(0,0,0,0.18)"
+                : "0 6px 14px rgba(0,0,0,0.14)"
+            }
+            border={isCurrentLevel ? "4px solid rgba(255, 240, 0, 0.60)" : "0"}
+            p={isCurrentLevel ? "10px 10px 8px" : "14px 14px 12px"}
+            transition="background 0.35s ease, box-shadow 0.35s ease, border 0.35s ease"
           >
             <Box
               w="168px"
@@ -70,7 +80,7 @@ function AITaskImageGrid({ energy }) {
                     display: "block",
                   }}
                   initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: isCurrentLevel ? 1.03 : 1 }}
                   exit={{ opacity: 0, scale: 1.04 }}
                   transition={{ duration: 0.35 }}
                 />

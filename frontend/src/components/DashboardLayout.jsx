@@ -332,8 +332,8 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
               {/* Bluetooth / ergometer connection indicator */}
         <Box
           position="absolute"
-          left="1470px"
-          top="18px"
+          right="1470px"
+          top="10px"
           w="28px"
           h="28px"
           borderRadius="full"
@@ -429,7 +429,7 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
               direction="column"
               align="center"
               justify="center"
-              bg="rgba(255,255,255,0.88)"
+              bg="rgba(255,245,235,0.72)"
               borderRadius="0px"
               border="0"
               boxShadow="0 4px 12px rgba(0,0,0,0.10)"
@@ -482,7 +482,7 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
           top="220px"
           w="515px"
           h="228px"
-          bg="rgba(255,238,222,0.88)"
+          bg="rgba(255,245,235,0.72)"
           border="0"
           boxShadow="0 4px 14px rgba(0,0,0,0.12)"
           align="center"
@@ -509,7 +509,7 @@ function DashboardLayout({ metrics, onStart, onStop, sessionActive }) {
               key={logo.src}
               w="155px"
               h="76px"
-              bg="rgba(255,255,255,0.92)"
+              bg="rgba(255,245,235,0.72)"
               align="center"
               justify="center"
               p="8px"
