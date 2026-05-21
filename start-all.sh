@@ -59,7 +59,7 @@ done
 echo "Frontend is now reachable."
 
 echo "Triggering PM5 wake via Shelly..."
-"$PROJECT_DIR/venv/bin/python" "$PROJECT_DIR/scripts/shelly_wake_pm5.py"
+SHELLY_POWER_CYCLE=1 SHELLY_POWER_OFF_SECONDS=3 "$PROJECT_DIR/venv/bin/python" "$PROJECT_DIR/scripts/shelly_wake_pm5.py"
 SHELLY_WAKE_EXIT=$?
 
 if [[ "$SHELLY_WAKE_EXIT" -ne 0 ]]; then
